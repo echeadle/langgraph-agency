@@ -1,3 +1,50 @@
+# Phase 3: The Coder Agent
+
+This phase introduces a new agent, the "Coder," responsible for generating Python code based on the approved plan from the Planner agent.
+
+## Objectives
+
+- Create a "Coder" agent capable of generating Python code.
+- Integrate the Coder agent into the existing workflow, following the human approval step.
+
+## `coder.py` Code
+
+```python
+import os
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_openai import ChatOpenAI
+from dotenv import load_dotenv
+
+load_dotenv()
+
+class Coder:
+    def __init__(self):
+        self.llm = ChatOpenAI(model="gpt-4o-mini")
+        self.prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", "You are a coder. Your job is to take a detailed development plan and generate Python code that implements the plan. Provide only the code, no explanations or extra text."),
+                ("user", "Development Plan: {plan}"),
+            ]
+        )
+        self.chain = self.prompt | self.llm
+
+    def code(self, plan: str) -> str:
+        message = self.chain.invoke({"plan": plan})
+        return getattr(message, "content", str(message))
+
+if __name__ == "__main__":
+    coder = Coder()
+    # This is a placeholder plan for testing purposes
+    test_plan = "Create a Python function that takes two numbers and returns their sum."
+    code_output = coder.code(test_plan)
+    print(code_output)
+```
+
+## Updated `main.py` Code (Orchestration with Coder Agent)
+
+This updated `main.py` integrates the Coder agent into the workflow. After human approval, the process now moves to the Coder agent to generate code based on the approved plan.
+
+```python
 from typing import TypedDict, Annotated, List, NotRequired
 from langchain_core.messages import BaseMessage, HumanMessage
 from langgraph.graph import StateGraph, END
@@ -32,7 +79,7 @@ def plan_node(state: AgentState):
     return {"plan": plan}
 
 def human_approval_node(state: AgentState):
-    print("---AWAITING HUMAN APPROVAL---")
+    print("---"AWAITING HUMAN APPROVAL"---")
     print(f"Generated Plan:\n{state['plan']}")
     # In a real application, this would involve a user interface or a more sophisticated approval mechanism.
     # For now, we'll simulate human approval via direct input.
@@ -77,3 +124,4 @@ if __name__ == "__main__":
     inputs: AgentState = {"user_input": user_query, "chat_history": []}
     for s in app.stream(inputs):
         print(s)
+```

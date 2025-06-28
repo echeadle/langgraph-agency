@@ -6,6 +6,8 @@ To create a multi-agent system built with LangGraph that can autonomously develo
 
 This project will serve as a comprehensive exploration of LangGraph's features, including state management, tool use, human-in-the-loop workflows, and multi-agent collaboration.
 
+## Special Instructions
+Do not run python code. You are not using the virtual enviroments so you cannot see the proper libraries.
 ## Core Capabilities
 
 - **Web Research**: Agents will use tools like Tavily Search to gather information and understand the client's requirements.
