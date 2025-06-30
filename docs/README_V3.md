@@ -40,12 +40,14 @@ if __name__ == "__main__":
     print(code_output)
 ```
 
-## Updated `main.py` Code (Orchestration with Coder Agent)
+## Updated `main.py` Code (Orchestration with Coder Agent and Graph Drawing)
 
-This updated `main.py` integrates the Coder agent into the workflow. After human approval, the process now moves to the Coder agent to generate code based on the approved plan.
+This updated `main.py` integrates the Coder agent into the workflow and adds a function to draw the graph, giving the user an option to visualize the workflow.
 
 ```python
 from typing import TypedDict, Annotated, List, NotRequired
+import io
+from PIL import Image as PILImage
 from langchain_core.messages import BaseMessage, HumanMessage
 from langgraph.graph import StateGraph, END
 from researcher import Researcher
@@ -79,7 +81,7 @@ def plan_node(state: AgentState):
     return {"plan": plan}
 
 def human_approval_node(state: AgentState):
-    print("---"AWAITING HUMAN APPROVAL"---")
+    print("---AWAITING HUMAN APPROVAL---")
     print(f"Generated Plan:\n{state['plan']}")
     # In a real application, this would involve a user interface or a more sophisticated approval mechanism.
     # For now, we'll simulate human approval via direct input.
@@ -95,6 +97,17 @@ def code_node(state: AgentState):
     print("---CODING---")
     code_output = coder_agent.code(state["plan"])
     return {"code_output": code_output}
+
+def draw_graph(graph):
+    """
+    Generates and displays a diagram of the graph.
+    """
+    try:
+        img_data = graph.get_graph().draw_mermaid_png()
+        image = PILImage.open(io.BytesIO(img_data))
+        image.show()
+    except Exception as e:
+        print(f"Error drawing graph: {e}")
 
 # Build the graph
 workflow = StateGraph(AgentState)
@@ -120,6 +133,10 @@ workflow.add_edge("code", END)
 app = workflow.compile()
 
 if __name__ == "__main__":
+    draw_option = input("Do you want to draw the graph? (yes/no): ").lower()
+    if draw_option == "yes":
+        draw_graph(app)
+
     user_query = input("What would you like to research and plan?: ")
     inputs: AgentState = {"user_input": user_query, "chat_history": []}
     for s in app.stream(inputs):

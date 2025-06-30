@@ -11,14 +11,14 @@ class Planner:
         self.llm = ChatOpenAI(model="gpt-4o-mini")
         self.prompt = ChatPromptTemplate.from_messages(
             [
-                ("system", "You are a planner. Your job is to take a research summary and create a detailed, step-by-step development plan."),
+                ("system", "You are a planner. Your job is to take a research summary and any retrieved context to create a detailed, step-by-step development plan. If feedback is provided, incorporate it to revise the plan.\n\nRetrieved Context: {context}\n\nFeedback: {feedback}"),
                 ("user", "Research Summary: {summary}"),
             ]
         )
         self.chain = self.prompt | self.llm
 
-    def plan(self, summary: str) -> str:
-        message = self.chain.invoke({"summary": summary})
+    def plan(self, summary: str, context: str = "", feedback: str = "No feedback provided.") -> str:
+        message = self.chain.invoke({"summary": summary, "context": context, "feedback": feedback})
         return getattr(message, "content", str(message))
 
 if __name__ == "__main__":
